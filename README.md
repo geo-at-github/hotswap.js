@@ -1,7 +1,7 @@
 hotswap.js
 ==========
 
-A web developer JS lib to swap .js and .css files in a running web application without a reload.
+A web developer JS lib to reload .js and .css files in a running web application without a page reload.
 
 
 
@@ -33,7 +33,7 @@ Check out the `/demo` directory. Start `demo.html` and play around with `css/dem
 Usage
 -----
 
-`Hotswap.js` is not intended for production use. You should remove it once you are done with active development.
+`hotswap.js` is not intended for production use. You should remove it once you are done with active development.
 
 ### Browsers
 
@@ -75,7 +75,7 @@ var h = window.hotswap;
 ### hotswap.refreshAllJs([excludedFiles]) ###
 
 Refreshes all .js files on the page except "hotswap.js" and the files listed in excludedFiles.
-@param excludedFiles Array of file names.
+<br />@param excludedFiles Array of file names.
 
 Example:
 
@@ -84,10 +84,10 @@ Example:
 hotswap.refreshAllJs( ["dont-refresh-me.js"] );
 ```
 
-### hotswap.refreshJs([includedFiles]) ###
+### hotswap.refreshJs(includedFiles) ###
 
 Refreshes only the .js files put listed includedFiles.
-@param includedFiles Array of file names.
+<br />@param includedFiles Array of file names.
 
 Example:
 
@@ -95,10 +95,10 @@ Example:
 hotswap.refreshJs = function( ["refresh-me.js","refresh-me-too.js"] ){}
 ```
 
-### hotswap.refreshAllCss([excludedFiles]) ###
+### hotswap.refreshAllCss(excludedFiles) ###
 
 Refreshes all .css files on the page except the files listed in excludedFiles.
-@param excludedFiles Array of file names.
+<br />@param excludedFiles Array of file names.
 
 Example:
 
@@ -106,10 +106,10 @@ Example:
 hotswap.refreshAllCss( ["dont-refresh-me.css"] ){}
 ```
 
-### hotswap.refreshCss([includedFiles]) ###
+### hotswap.refreshCss(includedFiles) ###
 
 Refreshes only the .css files listed in includedFiles.
-@param includedFiles Array of file names.
+<br />@param includedFiles Array of file names.
 
 Example:
 ```javascript
