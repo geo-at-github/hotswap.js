@@ -84,7 +84,7 @@ Example:
 hotswap.refreshAllJs( ["dont-refresh-me.js"] );
 ```
 
-### hotswap.refreshJs(includedFiles) ###
+### hotswap.refreshJs([includedFiles]) ###
 
 Refreshes only the .js files put listed includedFiles.
 <br />@param includedFiles Array of file names.
@@ -95,7 +95,7 @@ Example:
 hotswap.refreshJs = function( ["refresh-me.js","refresh-me-too.js"] ){}
 ```
 
-### hotswap.refreshAllCss(excludedFiles) ###
+### hotswap.refreshAllCss([excludedFiles]) ###
 
 Refreshes all .css files on the page except the files listed in excludedFiles.
 <br />@param excludedFiles Array of file names.
@@ -106,7 +106,7 @@ Example:
 hotswap.refreshAllCss( ["dont-refresh-me.css"] ){}
 ```
 
-### hotswap.refreshCss(includedFiles) ###
+### hotswap.refreshCss([includedFiles]) ###
 
 Refreshes only the .css files listed in includedFiles.
 <br />@param includedFiles Array of file names.
