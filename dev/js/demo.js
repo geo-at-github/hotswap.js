@@ -10,8 +10,13 @@ function refresh()
 {
     if(console) console.log("refreshing");
 
-    hotswap.refreshImg(["html5"]);
+    // refresh one specific image
+    hotswap.refreshImg(["html5.png"]);
+
+    // refresh alls css files
     hotswap.refreshAllCss();
+
+    // refresh all but demo.js
     hotswap.refreshAllJs(["demo.js"]);
 
     // test js hotswap

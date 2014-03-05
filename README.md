@@ -76,7 +76,7 @@ var h = window.hotswap;
 ### hotswap.refreshAllJs([excludedFiles]) ###
 
 Refreshes all .js files on the page except "hotswap.js" and the files listed in excludedFiles.
-<br />@param {array} - excludedFiles Array of file names.
+<br />@param excludedFiles {array} - Array of file names.
 
 Example:
 
@@ -88,7 +88,7 @@ hotswap.refreshAllJs( ["dont-refresh-me.js"] );
 ### hotswap.refreshJs([includedFiles]) ###
 
 Refreshes only the .js files listed in includedFiles.
-<br />@param {array} - includedFiles Array of file names.
+<br />@param includedFiles {array} - Array of file names.
 
 Example:
 
@@ -99,7 +99,7 @@ hotswap.refreshJs = function( ["refresh-me.js","refresh-me-too.js"] ){}
 ### hotswap.refreshAllCss([excludedFiles]) ###
 
 Refreshes all .css files on the page except the files listed in excludedFiles.
-<br />@param {array} - excludedFiles Array of file names.
+<br />@param excludedFiles {array} - Array of file names.
 
 Example:
 
@@ -110,7 +110,7 @@ hotswap.refreshAllCss( ["dont-refresh-me.css"] ){}
 ### hotswap.refreshCss([includedFiles]) ###
 
 Refreshes only the .css files listed in includedFiles.
-<br />@param {array} - includedFiles Array of file names.
+<br />@param includedFiles {array} - Array of file names.
 
 Example:
 ```javascript
@@ -120,7 +120,7 @@ hotswap.refreshCss( ["refresh-me.css","refresh-me-too.css"] );
 ### hotswap.refreshAllImg([excludedFiles]) ###
 
 Refreshes all image files (<img>) on the page except the files listed in excludedFiles.
-<br />@param {array} - excludedFiles Array of file names.
+<br />@param excludedFiles {array} - Array of file names.
 
 Example:
 
@@ -131,7 +131,7 @@ hotswap.refreshAllImg( ["dont-refresh-me.png"] ){}
 ### hotswap.refreshImg([includedFiles]) ###
 
 Refreshes only the image files (<img>) listed in includedFiles.
-<br />@param {array} - includedFiles Array of file names.
+<br />@param includedFiles {array} - Array of file names.
 
 Example:
 ```javascript
