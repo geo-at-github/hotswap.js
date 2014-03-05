@@ -2,13 +2,18 @@ function demo()
 {
     var refreshInterval = setInterval(function()
     {
-        console.log("refreshing");
-
-        hotswap.refreshAllCss();
-        hotswap.refreshAllJs(["demo.js"]);
-
-        // test js hotswap
-        test();
-
+        refresh();
     }, 1000);
+}
+
+function refresh()
+{
+    if(console) console.log("refreshing");
+
+    hotswap.refreshImg(["html5"]);
+    hotswap.refreshAllCss();
+    hotswap.refreshAllJs(["demo.js"]);
+
+    // test js hotswap
+    test();
 }

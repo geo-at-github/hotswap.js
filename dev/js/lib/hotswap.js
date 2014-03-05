@@ -79,6 +79,10 @@
         xGetParent = function(ele)
         {
             return ele.parentNode || ele.parentElement;
+        },
+        xInsertAfter = function( refEle, newEle )
+        {
+            return xGetParent(refEle).insertBefore(newEle, refEle.nextSibling);
         };
 
     // Create Hotswap singleton constructor.
@@ -107,97 +111,26 @@
     // --------------------
 
     /**
-     * Refreshes all .js files on the page except "hotswap.js" and the files listed in excludedFiles.
-     * @param excludedFiles Array of file names.
-     */
-    hotswap.prototype.refreshAllJs = function( excludedFiles )
-    {
-        if( typeof excludedFiles == "undefined" || !excludedFiles)
-        {
-            excludedFiles = []
-        }
-        excludedFiles.push("hotswap.js"); // always ignore hotswap.js itself
-
-        this._refresh(
-            "script",
-            function(ele)
-            {
-                return true; // type="text/javascript" is not required in html5, thus we assume it´s always a js script
-            },
-            "src",
-            excludedFiles,
-            false
-        );
-    };
-
-    /**
-     * Refreshes only the .js files put listed includedFiles.
-     * @param includedFiles Array of file names.
-     */
-    hotswap.prototype.refreshJs = function( includedFiles )
-    {
-        this._refresh(
-            "script",
-            function(ele)
-            {
-                return true; // type="text/javascript" is not required in html5, thus we assume it´s always a js script
-            },
-            "src",
-            includedFiles,
-            true
-        );
-    };
-
-    /**
-     * Refreshes all .css files on the page except the files listed in excludedFiles.
-     * @param excludedFiles Array of file names.
-     */
-    hotswap.prototype.refreshAllCss = function( excludedFiles )
-    {
-        this._refresh(
-            "link",
-            function(ele)
-            {
-                return (xGetAttribute(ele, "rel") == "stylesheet" || xGetAttribute(ele, "type") == "text/css");
-            },
-            "href",
-            excludedFiles,
-            false
-        );
-    };
-
-    /**
-     * Refreshes only the .css files listed in includedFiles.
-     * @param includedFiles Array of file names.
-     */
-    hotswap.prototype.refreshCss = function( includedFiles )
-    {
-        this._refresh(
-            "link",
-            function(ele)
-            {
-                return (xGetAttribute(ele, "rel") == "stylesheet" || xGetAttribute(ele, "type") == "text/css");
-            },
-            "href",
-            includedFiles,
-            true
-        );
-    };
-
-    /**
      *
-     * @param tagName usually "script" or "link"
-     * @param tagFilterFunc a function which returns eiterh true or false / function(ele){return true/false}
-     * @param srcAttributeName usually "src" or "href"
-     * @param xcludedFiles (in/ex)cluded files
-     * @param xcludeComparator true = include, false = exclude
+     * @param tagName {string} usually "script" or "link" (consider this a prefilter to the "tagFilterFunc" function)
+     * @param tagFilterFunc {function} - a function which returns either true or false / function(ele){return true/false}
+     * @param srcAttributeName {string} - usually "src" or "href"
+     * @param xcludedFiles {array} - (in/ex)cluded files
+     * @param xcludeComparator {bool} - true = include, false = exclude
+     * @param nDeleteDelay {numer} - time to wait until to delete the original source in milliseconds.
      */
-    hotswap.prototype._refresh = function( tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator )
+    hotswap.prototype._recreate = function( tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator, nDeleteDelay )
     {
         if( typeof xcludedFiles == "undefined" || !xcludedFiles)
         {
             xcludedFiles = [];
         }
+
+        if( typeof nDeleteDelay == "undefined")
+        {
+            nDeleteDelay = 0;
+        }
+
         var tags = xGetElementsByTagName(tagName);
         var newTags = [];
         var removeTags = [];
@@ -219,6 +152,7 @@
                     // clone the old tag (shallow copy)
                     var newTag = {
                         node: null,
+                        oldNode: tags[i],
                         parent: xGetParent(tags[i])
                     };
                     if( tagName == "script" )
@@ -228,7 +162,7 @@
                     }
                     else
                     {
-                        // all others can be cloned
+                        // we assume that all other tags can be cloned
                         newTag.node = xCloneNode(tags[i], false);
                     }
                     // copy all properties
@@ -239,36 +173,219 @@
                     }
 
                     // update the src property
-                    src = src.replace(new RegExp("(\\?|&)"+this.RND_PARAM_NAME+"=[0-9.]*","g"), "");
-                    if( xContains(src, "?") )
-                    {
-                        if(xContains(src, "&" + this.RND_PARAM_NAME))
-                        {
-                            src = src.split("&" + this.RND_PARAM_NAME).slice(0,-1).join("");
-                        }
-                        xSetAttribute( newTag.node, srcAttributeName, src + "&" + this.RND_PARAM_NAME + "=" + Math.random() * 99999999 )
-                    }
-                    else
-                    {
-                        if(xContains(src, "?" + this.RND_PARAM_NAME))
-                        {
-                            src = src.split("?" + this.RND_PARAM_NAME).slice(0,-1).join("");
-                        }
-                        xSetAttribute( newTag.node, srcAttributeName, src + "?" + this.RND_PARAM_NAME + "=" + Math.random() * 99999999 )
-                    }
+                    xSetAttribute( newTag.node, srcAttributeName, this._updatedUrl(src) );
+
+                    // schedule tags to be removed and recreated.
                     newTags.push(newTag);
                     removeTags.push(tags[i]);
                 }
             }
         }
 
-        for(var i=0; i < removeTags.length; i++) {
-            xRemove(removeTags[i]);
+        // Add clones first ...
+        for(var i=0; i < newTags.length; i++) {
+            xInsertAfter(newTags[i].oldNode, newTags[i].node);
         }
 
-        for(var i=0; i < newTags.length; i++) {
-            xAppendChild(newTags[i].parent, newTags[i].node);
+        // ... and remove the original nodes later. This should avoid a time gap without any definitions (useful for css).
+        if( nDeleteDelay > 0 )
+        {
+            setTimeout( function() {
+                for(var i=0; i < removeTags.length; i++) {
+                    xRemove(removeTags[i]);
+                }
+            }, nDeleteDelay);
         }
+        else
+        {
+            for(var i=0; i < removeTags.length; i++) {
+                xRemove(removeTags[i]);
+            }
+        }
+
+    };
+
+    /**
+     *
+     * @param tagName {string} usually "script" or "link" (consider this a prefilter to the "tagFilterFunc" function)
+     * @param tagFilterFunc {function} - a function which returns either true or false / function(ele){return true/false}
+     * @param srcAttributeName {string} - usually "src" or "href"
+     * @param xcludedFiles {array} - (in/ex)cluded files
+     * @param xcludeComparator {bool} - true = include, false = exclude
+     */
+    hotswap.prototype._reload = function( tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator )
+    {
+        if( typeof xcludedFiles == "undefined" || !xcludedFiles)
+        {
+            xcludedFiles = [];
+        }
+        var tags = xGetElementsByTagName(tagName);
+        var newTags = [];
+        var removeTags = [];
+        var src, detected, node;
+        for(var i=0; i<tags.length; i++) {
+            node = tags[i];
+            src = xGetAttribute(node,[srcAttributeName]);
+            if(src && tagFilterFunc(node))
+            {
+                detected = false;
+                for(var j=0; j<xcludedFiles.length; j++) {
+                    if( xContains(src,xcludedFiles[j]) )
+                    {
+                        detected = true;
+                        break;
+                    }
+                }
+                if( detected == xcludeComparator )
+                {
+                    // update the src property
+                    xSetAttribute( node, srcAttributeName, this._updatedUrl(src) );
+                }
+            }
+        }
+    };
+
+    /**
+     *
+     * @param url {string} - a valid url (local or web)
+     * @returns {string} - the updated url with appended cache invalidation parameter.
+     */
+    hotswap.prototype._updatedUrl = function( url )
+    {
+        url = url.replace(new RegExp("(\\?|&)"+this.RND_PARAM_NAME+"=[0-9.]*","g"), "");
+        if( xContains(url, "?") )
+        {
+            if(xContains(url, "&" + this.RND_PARAM_NAME))
+            {
+                url = url.split("&" + this.RND_PARAM_NAME).slice(0,-1).join("");
+            }
+            url = url + "&" + this.RND_PARAM_NAME + "=" + Math.random() * 99999999;
+        }
+        else
+        {
+            if(xContains(url, "?" + this.RND_PARAM_NAME))
+            {
+                url = url.split("?" + this.RND_PARAM_NAME).slice(0,-1).join("");
+            }
+            url = url + "?" + this.RND_PARAM_NAME + "=" + Math.random() * 99999999;
+        }
+        return url;
+    }
+
+    /**
+     * Refreshes all .js files on the page except "hotswap.js" and the files listed in excludedFiles.
+     * @param excludedFiles {array} - A list of file names.
+     */
+    hotswap.prototype.refreshAllJs = function( excludedFiles )
+    {
+        if( typeof excludedFiles == "undefined" || !excludedFiles)
+        {
+            excludedFiles = []
+        }
+        excludedFiles.push("hotswap.js"); // always ignore hotswap.js itself
+
+        this._recreate(
+            "script",
+            function(ele)
+            {
+                return true; // type="text/javascript" is not required in html5, thus we assume it´s always a js script
+            },
+            "src",
+            excludedFiles,
+            false
+        );
+    };
+
+    /**
+     * Refreshes only the .js files listed in includedFiles.
+     * @param includedFiles {array} - A list of file names.
+     */
+    hotswap.prototype.refreshJs = function( includedFiles )
+    {
+        this._recreate(
+            "script",
+            function(ele)
+            {
+                return true; // type="text/javascript" is not required in html5, thus we assume it´s always a js script
+            },
+            "src",
+            includedFiles,
+            true
+        );
+    };
+
+    /**
+     * Refreshes all .css files on the page except the files listed in excludedFiles.
+     * @param excludedFiles {array} - A list of file names.
+     */
+    hotswap.prototype.refreshAllCss = function( excludedFiles )
+    {
+        this._recreate(
+            "link",
+            function(ele)
+            {
+                return (xGetAttribute(ele, "rel") == "stylesheet" || xGetAttribute(ele, "type") == "text/css");
+            },
+            "href",
+            excludedFiles,
+            false,
+            200 // we assume that the developer is on a local host, thus 200 MS for loading a .css file should suffice.
+        );
+    };
+
+    /**
+     * Refreshes only the .css files listed in includedFiles.
+     * @param includedFiles {array} - A list of file names.
+     */
+    hotswap.prototype.refreshCss = function( includedFiles )
+    {
+        this._recreate(
+            "link",
+            function(ele)
+            {
+                return (xGetAttribute(ele, "rel") == "stylesheet" || xGetAttribute(ele, "type") == "text/css");
+            },
+            "href",
+            includedFiles,
+            true,
+            200 // we assume that the developer is on a local host, thus 200 MS for loading a .css file should suffice.
+        );
+    };
+
+    /**
+     * Refreshes all image files (<img>) on the page except the files listed in excludedFiles.
+     * @param excludedFiles {array} - A list of file names.
+     */
+    hotswap.prototype.refreshAllImg = function( excludedFiles )
+    {
+        this._reload(
+            "img",
+            function(ele)
+            {
+                return (xGetAttribute(ele, "src") != "");
+            },
+            "src",
+            excludedFiles,
+            false
+        );
+    };
+
+    /**
+     * Refreshes only the image files (<img>) listed in includedFiles.
+     * @param includedFiles {array} - A list of file names.
+     */
+    hotswap.prototype.refreshImg = function( includedFiles )
+    {
+        this._reload(
+            "img",
+            function(ele)
+            {
+                return (xGetAttribute(ele, "src") != "");
+            },
+            "src",
+            includedFiles,
+            true
+        );
     };
 
 }).call(this);

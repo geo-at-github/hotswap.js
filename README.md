@@ -52,7 +52,8 @@ A global variable `window.hotswap` or simply `hotswap` is created.
 
 ### Browser Compatiblity
 
-`hotswap.js` has been designed to be compatible with IE7+, Firefox 23+, Safari 5+, Chrome 29+. Please report any browser issues here: https://github.com/geo-at-github/hotswap.js/issues
+Since `hotswap.js` is a library for developers and not consumers browser compatibility is not in the focus of development.
+`hotswap.js` has been designed to be compatible with IE9+, Firefox 23+, Safari 5+, Chrome 29+. Please report any browser issues here: https://github.com/geo-at-github/hotswap.js/issues
 
 
 
@@ -75,7 +76,7 @@ var h = window.hotswap;
 ### hotswap.refreshAllJs([excludedFiles]) ###
 
 Refreshes all .js files on the page except "hotswap.js" and the files listed in excludedFiles.
-<br />@param excludedFiles Array of file names.
+<br />@param {array} - excludedFiles Array of file names.
 
 Example:
 
@@ -86,8 +87,8 @@ hotswap.refreshAllJs( ["dont-refresh-me.js"] );
 
 ### hotswap.refreshJs([includedFiles]) ###
 
-Refreshes only the .js files put listed includedFiles.
-<br />@param includedFiles Array of file names.
+Refreshes only the .js files listed in includedFiles.
+<br />@param {array} - includedFiles Array of file names.
 
 Example:
 
@@ -98,7 +99,7 @@ hotswap.refreshJs = function( ["refresh-me.js","refresh-me-too.js"] ){}
 ### hotswap.refreshAllCss([excludedFiles]) ###
 
 Refreshes all .css files on the page except the files listed in excludedFiles.
-<br />@param excludedFiles Array of file names.
+<br />@param {array} - excludedFiles Array of file names.
 
 Example:
 
@@ -109,9 +110,30 @@ hotswap.refreshAllCss( ["dont-refresh-me.css"] ){}
 ### hotswap.refreshCss([includedFiles]) ###
 
 Refreshes only the .css files listed in includedFiles.
-<br />@param includedFiles Array of file names.
+<br />@param {array} - includedFiles Array of file names.
 
 Example:
 ```javascript
 hotswap.refreshCss( ["refresh-me.css","refresh-me-too.css"] );
+```
+
+### hotswap.refreshAllImg([excludedFiles]) ###
+
+Refreshes all image files (<img>) on the page except the files listed in excludedFiles.
+<br />@param {array} - excludedFiles Array of file names.
+
+Example:
+
+```javascript
+hotswap.refreshAllImg( ["dont-refresh-me.png"] ){}
+```
+
+### hotswap.refreshImg([includedFiles]) ###
+
+Refreshes only the image files (<img>) listed in includedFiles.
+<br />@param {array} - includedFiles Array of file names.
+
+Example:
+```javascript
+hotswap.refreshImg( ["refresh-me.png","refresh-me-too.png"] );
 ```

@@ -2,3 +2,18 @@ body
 {
     background-color: #ffffff;
 }
+
+#js-output
+{
+    display:block;
+    margin: 0 auto;
+
+    width: 98%;
+    height: 5em;
+}
+
+img
+{
+    display: block;
+    margin: 2em auto;
+}
