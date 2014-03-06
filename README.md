@@ -50,6 +50,21 @@ set the type to application/javascript in IE browsers, your Javscript will fail.
 
 A global variable `window.hotswap` or simply `hotswap` is created.
 
+Now you can reload your included .css, .js or image (<img>) files by executing the corresponding "hotswap" command.
+
+Example:
+
+```javascript
+// refresh all .js files
+hotswap.refreshAllJs();
+
+// refresh main.css only
+hotswap.refreshCss( ["main.js"] );
+
+// refresh all images (<img> tags) except "dont-refreh-me.png".
+hotswap.refreshAllImg( ["dont-refreh-me.png"] );
+```
+
 ### Browser Compatiblity
 
 Since `hotswap.js` is a library for developers and not consumers browser compatibility is not in the focus of development.
