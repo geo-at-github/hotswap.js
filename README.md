@@ -8,13 +8,13 @@ A web developer JS lib to reload .js and .css files in a running web application
 Why?
 ----
 
-This is targeted primarily at mobile and single page web application developers. Both app types usually have some internal state which is tedious to restore after a page reload.
+This is targeted primarily at mobile and single page web application developers. Both app types usually have some internal state which is labor-intensive to restore for testing. This is tedious, especially if the change is just a simple update of a css, javascript or image file.
 
-Usually a full page reload is required to update .css or .js files. Some IDEs solve this by supporting refreshing whenever they change. Unfortunately most of them don´t work on mobile and often don´t work when files are preprocessed (closure compiler, LESS, SASS, ...).
+Some IDEs try to ease this process by supporting refreshing the page whenever a resource file changes. Unfortunately most of them don´t support mobile and often don´t work when files are preprocessed (closure compiler, LESS, SASS, ...).
 
 This leads us to the hotswap.js "solution" which makes the browser pull the changes from the final files instead of waiting for an IDE to push changes. Doing it this way we don´t have to worry about how the file came to existence and application state is preserved too.
 
-I personally consider this a workaround until something better comes along. Please let me know if there is a working cross browser, cross platform solution out there. I would love to ditch this project in favour of a better solution ;-)
+I personally consider this a workaround until something better comes along. Please let me know if there is a working cross browser, cross platform, mobile enabled solution out there. I would love to ditch this project in favour of a better solution ;-)
 
 Installation
 ------------
@@ -170,7 +170,7 @@ If prefix is not false, null or "" then it will be appended to all refreshed fil
 Example:
 
 ```javascript
-// Load sources from a local LAN.
+// Load sources from a local network.
 hotswap.setPrefix("http://192.168.0.100/htdocs/");
 ```
 
