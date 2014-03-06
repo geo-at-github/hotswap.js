@@ -35,7 +35,7 @@ Usage
 
 `hotswap.js` is not intended for production use. You should remove it once you are done with active development.
 
-### Browsers
+1) Include `hotswap.js` in your page.
 
 ```html
 <!-- HTML5 -->
@@ -48,11 +48,10 @@ set the type to application/javascript in IE browsers, your Javscript will fail.
 <script type="text/javascript" src="https://raw.github.com/geo-at-github/hotswap.js/master/lib/hotswap.js"></script>
 ```
 
-A global variable `window.hotswap` or simply `hotswap` is created.
+A global variable `window.hotswap` or simply `hotswap` will be created.
 
-Now you can reload your included .css, .js or image (<img>) files by executing the corresponding "hotswap" command.
 
-Example:
+2) You can reload your included .css, .js or image (<img>) files by executing the corresponding "hotswap" command.
 
 ```javascript
 // refresh all .js files
