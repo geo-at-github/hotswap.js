@@ -50,6 +50,14 @@
         {
             return sHaystack.indexOf(sNeedle) >= 0
         },
+        xStartsWith = function(sHaystack, sNeedle)
+        {
+            return sHaystack.indexOf(sNeedle) === 0
+        },
+        xReplace = function(sHaystack, sNeedle)
+        {
+            return sHaystack.split(sNeedle).join("");
+        },
         xGetAttribute = function(ele, sAttr)
         {
             var result = (ele.getAttribute && ele.getAttribute(sAttr)) || null;
@@ -107,79 +115,73 @@
     // The random parameter name which is added to urls to prevent caching
     hotswap.prototype.RND_PARAM_NAME = 'hs982345jkasg89zqnsl';
 
+    // If it is defined then it will be appended to all refreshed file urls.
+    hotswap.prototype._prefix = false;
+    hotswap.prototype._previousPrefix = false;
+
     // Functions
     // --------------------
 
     /**
      *
-     * @param tagName {string} usually "script" or "link" (consider this a prefilter to the "tagFilterFunc" function)
-     * @param tagFilterFunc {function} - a function which returns either true or false / function(ele){return true/false}
-     * @param srcAttributeName {string} - usually "src" or "href"
-     * @param xcludedFiles {array} - (in/ex)cluded files
-     * @param xcludeComparator {bool} - true = include, false = exclude
-     * @param nDeleteDelay {numer} - time to wait until to delete the original source in milliseconds.
+     * @param tagName {String} usually "script" or "link" (consider this a prefilter to the "tagFilterFunc" function)
+     * @param tagFilterFunc {Function} - a function which returns either true or false / function(ele){return true/false}
+     * @param srcAttributeName {String} - usually "src" or "href"
+     * @param xcludedFiles {Array} - (in/ex)cluded files
+     * @param xcludeComparator {Boolean} - true = include, false = exclude
+     * @param nDeleteDelay {Number} - time to wait until to delete the original source in milliseconds.
+     * @param bForceRecreation {Boolean} - true = real recreation, false = recreation by node cloning
      */
-    hotswap.prototype._recreate = function( tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator, nDeleteDelay )
+    hotswap.prototype._recreate = function( tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator, nDeleteDelay, bForceRecreation )
     {
-        if( typeof xcludedFiles == "undefined" || !xcludedFiles)
-        {
-            xcludedFiles = [];
-        }
-
         if( typeof nDeleteDelay == "undefined")
         {
             nDeleteDelay = 0;
         }
 
-        var tags = xGetElementsByTagName(tagName);
+        if( typeof bForceRecreation == "undefined")
+        {
+            bForceRecreation = false;
+        }
+
+        var tags = this._getFiles(tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator);
         var newTags = [];
         var removeTags = [];
-        var src, detected;
-        for(var i=0; i<tags.length; i++) {
-            src = xGetAttribute(tags[i],[srcAttributeName]);
-            if(src && tagFilterFunc(tags[i]))
+        var i, src, detected, node;
+        for(i=0; i<tags.length; i++)
+        {
+            // clone the old node (shallow copy)
+            node = tags[i];
+            var newNode = {
+                node: null,
+                oldNode: node,
+                parent: xGetParent(node)
+            };
+            if( bForceRecreation )
             {
-                detected = false;
-                for(var j=0; j<xcludedFiles.length; j++) {
-                    if( xContains(src,xcludedFiles[j]) )
-                    {
-                        detected = true;
-                        break;
-                    }
-                }
-                if( detected == xcludeComparator )
-                {
-                    // clone the old tag (shallow copy)
-                    var newTag = {
-                        node: null,
-                        oldNode: tags[i],
-                        parent: xGetParent(tags[i])
-                    };
-                    if( tagName == "script" )
-                    {
-                        // script tags need to be recreated to force a refresh in all browsers
-                        newTag.node = xCreateElement("script");
-                    }
-                    else
-                    {
-                        // we assume that all other tags can be cloned
-                        newTag.node = xCloneNode(tags[i], false);
-                    }
-                    // copy all properties
-                    for (var p in tags[i]) {
-                        if (tags[i].hasOwnProperty(p)) {
-                            newTag.node.p = tags[i].p;
-                        }
-                    }
+                // "<script>" tags need to be recreated from scratch to force a refresh in all browsers
+                newNode.node = xCreateElement("script");
+            }
+            else
+            {
+                // most other tags can be cloned for "recreation"
+                newNode.node = xCloneNode(node, false);
+            }
 
-                    // update the src property
-                    xSetAttribute( newTag.node, srcAttributeName, this._updatedUrl(src) );
-
-                    // schedule tags to be removed and recreated.
-                    newTags.push(newTag);
-                    removeTags.push(tags[i]);
+            // copy all properties
+            for (var p in node) {
+                if (node.hasOwnProperty(p)) {
+                    newNode.node.p = node.p;
                 }
             }
+
+            // update the src property
+            src = xGetAttribute( node, srcAttributeName );
+            xSetAttribute( newNode.node, srcAttributeName, this._updatedUrl(src) );
+
+            // schedule tags to be removed and recreated.
+            newTags.push(newNode);
+            removeTags.push(tags[i]);
         }
 
         // Add clones first ...
@@ -202,26 +204,47 @@
                 xRemove(removeTags[i]);
             }
         }
-
     };
 
     /**
      *
-     * @param tagName {string} usually "script" or "link" (consider this a prefilter to the "tagFilterFunc" function)
-     * @param tagFilterFunc {function} - a function which returns either true or false / function(ele){return true/false}
-     * @param srcAttributeName {string} - usually "src" or "href"
-     * @param xcludedFiles {array} - (in/ex)cluded files
-     * @param xcludeComparator {bool} - true = include, false = exclude
+     * @param tagName {String} usually "script" or "link" (consider this a prefilter to the "tagFilterFunc" function)
+     * @param tagFilterFunc {Function} - a function which returns either true or false / function(ele){return true/false}
+     * @param srcAttributeName {String} - usually "src" or "href"
+     * @param xcludedFiles {Array} - (in/ex)cluded files
+     * @param xcludeComparator {Boolean} - true = include, false = exclude
      */
     hotswap.prototype._reload = function( tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator )
+    {
+        var tags = this._getFiles(tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator);
+        var i, src, node;
+        for(i=0; i<tags.length; i++)
+        {
+            node = tags[i];
+            // update the src property
+            src = xGetAttribute( node, srcAttributeName );
+            xSetAttribute( node, srcAttributeName, this._updatedUrl(src) );
+        }
+    };
+
+    /**
+     * Searches in the dom an returns an array of found nodes.
+     * @param tagName {String} usually "script" or "link" (consider this a prefilter to the "tagFilterFunc" function)
+     * @param tagFilterFunc {Function} - a function which returns either true or false / function(ele){return true/false}
+     * @param srcAttributeName {String} - usually "src" or "href"
+     * @param xcludedFiles {Array} - (in/ex)cluded files
+     * @param xcludeComparator {Boolean} - true = include, false = exclude
+     * @return {Array} - list of dom nodes (usually <link>,<script> or <img>)
+     */
+    hotswap.prototype._getFiles = function( tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator )
     {
         if( typeof xcludedFiles == "undefined" || !xcludedFiles)
         {
             xcludedFiles = [];
         }
+
+        var fileNodes = [];
         var tags = xGetElementsByTagName(tagName);
-        var newTags = [];
-        var removeTags = [];
         var src, detected, node;
         for(var i=0; i<tags.length; i++) {
             node = tags[i];
@@ -239,16 +262,18 @@
                 if( detected == xcludeComparator )
                 {
                     // update the src property
-                    xSetAttribute( node, srcAttributeName, this._updatedUrl(src) );
+                    fileNodes.push( node );
                 }
             }
         }
+
+        return fileNodes;
     };
 
     /**
      *
-     * @param url {string} - a valid url (local or web)
-     * @returns {string} - the updated url with appended cache invalidation parameter.
+     * @param url {String} - a valid url (local or web)
+     * @returns {String} - the updated url with appended cache invalidation parameter.
      */
     hotswap.prototype._updatedUrl = function( url )
     {
@@ -269,12 +294,39 @@
             }
             url = url + "?" + this.RND_PARAM_NAME + "=" + Math.random() * 99999999;
         }
+
+        // apply prefix
+        if( typeof this._prefix != "undefined" &&
+             this._prefix &&
+             this._prefix != ""
+            )
+        {
+            if( !xStartsWith(url, this._prefix) )
+            {
+                url = this._prefix + url;
+            }
+        }
+        else
+        {
+            // reset to previous prefix if necessary
+            if( typeof this._previousPrefix != "undefined" &&
+                this._previousPrefix &&
+                this._previousPrefix != ""
+                )
+            {
+                if( xStartsWith(url, this._previousPrefix) )
+                {
+                    url = xReplace(url, this._previousPrefix);
+                }
+            }
+        }
+
         return url;
     }
 
     /**
      * Refreshes all .js files on the page except "hotswap.js" and the files listed in excludedFiles.
-     * @param excludedFiles {array} - A list of file names.
+     * @param excludedFiles {Array} - A list of file names.
      */
     hotswap.prototype.refreshAllJs = function( excludedFiles )
     {
@@ -292,13 +344,15 @@
             },
             "src",
             excludedFiles,
-            false
+            false,
+            0,
+            true
         );
     };
 
     /**
      * Refreshes only the .js files listed in includedFiles.
-     * @param includedFiles {array} - A list of file names.
+     * @param includedFiles {Array} - A list of file names.
      */
     hotswap.prototype.refreshJs = function( includedFiles )
     {
@@ -310,13 +364,15 @@
             },
             "src",
             includedFiles,
+            true,
+            0,
             true
         );
     };
 
     /**
      * Refreshes all .css files on the page except the files listed in excludedFiles.
-     * @param excludedFiles {array} - A list of file names.
+     * @param excludedFiles {Array} - A list of file names.
      */
     hotswap.prototype.refreshAllCss = function( excludedFiles )
     {
@@ -335,7 +391,7 @@
 
     /**
      * Refreshes only the .css files listed in includedFiles.
-     * @param includedFiles {array} - A list of file names.
+     * @param includedFiles {Array} - A list of file names.
      */
     hotswap.prototype.refreshCss = function( includedFiles )
     {
@@ -354,7 +410,7 @@
 
     /**
      * Refreshes all image files (<img>) on the page except the files listed in excludedFiles.
-     * @param excludedFiles {array} - A list of file names.
+     * @param excludedFiles {Array} - A list of file names.
      */
     hotswap.prototype.refreshAllImg = function( excludedFiles )
     {
@@ -372,7 +428,7 @@
 
     /**
      * Refreshes only the image files (<img>) listed in includedFiles.
-     * @param includedFiles {array} - A list of file names.
+     * @param includedFiles {Array} - A list of file names.
      */
     hotswap.prototype.refreshImg = function( includedFiles )
     {
@@ -387,5 +443,26 @@
             true
         );
     };
+
+    /**
+     * If prefix is not false, null or "" then it will be appended to all refreshed file urls.
+     * This is useful to force files to be loaded from a remote source without changing the html code.
+     * To turn off prefixing just reset it to false, null or "".
+     * @param prefix {String} - the prefix as string (e.g.: http://192.168.0.100/htdocs/)
+     */
+    hotswap.prototype.setPrefix = function( prefix )
+    {
+        this._previousPrefix = this._prefix;
+        this._prefix = prefix;
+    }
+
+    /**
+     * Returns the currently saved prefix.
+     * @returns {Boolean|String}
+     */
+    hotswap.prototype.getPrefix = function()
+    {
+        return this._prefix;
+    }
 
 }).call(this);

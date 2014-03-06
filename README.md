@@ -62,6 +62,7 @@ Methods / API
 
 Square brackets means "optional parameter".
 
+
 ### window.hotswap or hotswap ###
 
 This returns the `hotswap.js` object (singleton).
@@ -72,6 +73,7 @@ Example:
 // I like it short
 var h = window.hotswap;
 ```
+
 
 ### hotswap.refreshAllJs([excludedFiles]) ###
 
@@ -85,6 +87,7 @@ Example:
 hotswap.refreshAllJs( ["dont-refresh-me.js"] );
 ```
 
+
 ### hotswap.refreshJs([includedFiles]) ###
 
 Refreshes only the .js files listed in includedFiles.
@@ -95,6 +98,7 @@ Example:
 ```javascript
 hotswap.refreshJs = function( ["refresh-me.js","refresh-me-too.js"] ){}
 ```
+
 
 ### hotswap.refreshAllCss([excludedFiles]) ###
 
@@ -107,6 +111,7 @@ Example:
 hotswap.refreshAllCss( ["dont-refresh-me.css"] ){}
 ```
 
+
 ### hotswap.refreshCss([includedFiles]) ###
 
 Refreshes only the .css files listed in includedFiles.
@@ -116,6 +121,7 @@ Example:
 ```javascript
 hotswap.refreshCss( ["refresh-me.css","refresh-me-too.css"] );
 ```
+
 
 ### hotswap.refreshAllImg([excludedFiles]) ###
 
@@ -128,6 +134,7 @@ Example:
 hotswap.refreshAllImg( ["dont-refresh-me.png"] ){}
 ```
 
+
 ### hotswap.refreshImg([includedFiles]) ###
 
 Refreshes only the image files (<img>) listed in includedFiles.
@@ -136,4 +143,30 @@ Refreshes only the image files (<img>) listed in includedFiles.
 Example:
 ```javascript
 hotswap.refreshImg( ["refresh-me.png","refresh-me-too.png"] );
+```
+
+
+### hotswap.setPrefix(prefix) ###
+
+If prefix is not false, null or "" then it will be appended to all refreshed file urls.
+<br />This is useful to force files to be loaded from a remote source without changing the html code.
+<br />To turn off prefixing just reset it to false, null or "".
+<br />@param prefix {Boolean|String} - the prefix as string (e.g.: http://192.168.0.100/htdocs/)
+
+Example:
+
+```javascript
+// Load sources from a local LAN.
+hotswap.setPrefix("http://192.168.0.100/htdocs/");
+```
+
+
+### hotswap.getPrefix() ###
+
+Returns the currently saved prefix.
+<br />@returns {Boolean|String} - the currently saved prefix
+
+Example:
+```javascript
+var currentPrefix = hotswap.getPrefix();
 ```
