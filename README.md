@@ -184,3 +184,25 @@ Example:
 ```javascript
 var currentPrefix = hotswap.getPrefix();
 ```
+
+
+### hotswap.createGui([nDistanceFromTopInPercent]) ###
+
+Creates and displays a (position fixed) gui for hotswap.
+Useful for testing in environments without a debug console.
+<br />@param nDistanceFromTopInPercent {Number} - Defines the distance to the top of the page in percent (default is 20).
+
+Example:
+```javascript
+hotswap.createGui();
+```
+
+
+### hotswap.deleteGui() ###
+
+Hides and deletes the gui if it exists.
+
+Example:
+```javascript
+hotswap.deleteGui();
+```

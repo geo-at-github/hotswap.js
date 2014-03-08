@@ -21,13 +21,14 @@
     <textarea id="js-output"></textarea>
     <img src="img/html5.png" alt="html5" />
     <img src="img/html4.png" alt="html4" />
-
+    <!-- This is here for development purposes. Please ignore it ;) -->
+    <!--
     <style type="text/css">
         #PREFIX
         {
             display: block;
-            position: absolute;
-            top: 10%;
+            position: fixed;
+            top: 20%;/*distance from top*/
             right: 0;
             z-index: 99999;
             width: 17em;
@@ -39,8 +40,26 @@
             font-family: Verdana, sans-serif;
             font-size: 0.7em;
 
+            -webkit-box-shadow: 0 0px 0.3em 0.1em #999999;
+            -moz-box-shadow: 0 0px 0.3em 0.1em #999999;
+            box-shadow: 0 0px 0.3em 0.1em #999999;
         }
-
+        #PREFIX.mini
+        {
+            width: 2.9em;
+            height: 2.9em;
+            overflow:hidden;
+        }
+        #PREFIX.mini .PREFIX-header input, #PREFIX.mini .PREFIX-list, #PREFIX.mini .PREFIX-footer
+        {
+            display:none;
+        }
+        #PREFIX.mini .PREFIX-header div
+        {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
         #PREFIX input
         {
             font-size: 1.0em;
@@ -48,7 +67,6 @@
             border-radius: 0.2em;
             padding: 0.2em 0.1em;
         }
-
         #PREFIX .PREFIX-header
         {
             height: 2.1em;
@@ -58,13 +76,11 @@
             color: white;
             background-color: black;
         }
-
         #PREFIX .PREFIX-header input
         {
             width: 80%;
             height: 1.4em;
         }
-
         #PREFIX .PREFIX-header div
         {
             position: absolute;
@@ -77,15 +93,19 @@
             text-align: center;
             font-size: 2em;
             font-weight: bold;
-        }
 
+            cursor: pointer;
+        }
+        #PREFIX .PREFIX-header div:hover
+        {
+            background-color: #444444;
+        }
         #PREFIX .PREFIX-list
         {
             width: 100%;
             height: 20em;
             overflow: auto;
         }
-
         #PREFIX ul
         {
             list-style-type: none;
@@ -93,7 +113,6 @@
             padding: 0;
             margin: 0.5em 0.5em 1.2em 0.5em;
         }
-
         #PREFIX ul li
         {
             margin: 0.3em;
@@ -104,22 +123,18 @@
             line-height: 1.5em;
             cursor: pointer;
         }
-
         #PREFIX ul li:hover
         {
             background-color: #797979;
         }
-
         #PREFIX ul li.template
         {
             display: none;
         }
-
         #PREFIX ul li.active
         {
             background-color: black;
         }
-
         #PREFIX ul li.PREFIX-headline
         {
             color: white;
@@ -127,20 +142,17 @@
             text-align: center;
             font-weight: bold;
         }
-
         #PREFIX .PREFIX-footer
         {
             padding: 0;
             margin:0;
             background-color: #444444;
         }
-
         #PREFIX .PREFIX-footer ul
         {
             margin: 0;
             padding: 0.5em;
         }
-
         #PREFIX .PREFIX-footer ul li
         {
             color: white;
@@ -149,30 +161,26 @@
             border-radius: 0.5em;
             text-align: center;
         }
-
         #PREFIX .PREFIX-footer ul li input.PREFIX-seconds
         {
             text-align: center;
             width: 2em;
         }
-
         #PREFIX .PREFIX-footer ul li:hover
         {
             background-color: #222222;
         }
-
         #PREFIX .PREFIX-footer ul li.inactive
         {
             background-color: #666666;
             cursor: default;
         }
-
     </style>
 
-    <div id="PREFIX">
+    <div id="PREFIX" class="mini">
         <div class="PREFIX-header">
             <input id="PREFIX-prefix" placeholder="prefix" type="text" name="" />
-            <div>H</div>
+            <div id="PREFIX-toggle">H</div>
         </div>
         <div class="PREFIX-list">
             <ul id="PREFIX-css">
@@ -196,6 +204,7 @@
             </ul>
         </div>
     </div>
+    -->
 </body>
 
 </html>

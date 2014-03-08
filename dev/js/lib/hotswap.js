@@ -48,10 +48,17 @@
     root.hotswap = hotswap();
 
     // Current version (Semantic Versioning: http://semver.org)
-    hotswap.prototype.VERSION = '0.0.2';
+    hotswap.prototype.VERSION = '0.1.0';
 
     // The random parameter name which is added to urls to prevent caching
     hotswap.prototype.RND_PARAM_NAME = 'hs982345jkasg89zqnsl';
+
+    // This is the delay in Milliseconds after which the recreated css <link> tags are removed.
+    // We assume that the developer is on a local host or LAN, thus 400 MS should suffice.
+    hotswap.prototype.FILE_REMOVAL_DELAY = 400;
+
+    // This prefix is applied to all GUI css classes and GUI html tag id attributes to avoid collisions.
+    hotswap.prototype.CSS_HTML_PREFIX = 'hs982345jkasg89zqnsl';
 
     // If it is defined then it will be appended to all refreshed file urls.
     hotswap.prototype._prefix = false;
@@ -60,6 +67,183 @@
     // used to store data about selected files in the gui
     hotswap.prototype._guiCache = {};
     hotswap.prototype._guiGuiRefreshInterval = null;
+
+    // I know this is ugly but it works and is cross browser compatible and standard compliant.
+    hotswap.prototype._guiHtml = '' +
+    '<style type="text/css">'+
+    '    #PREFIX'+
+    '    {'+
+    '        display: block;'+
+    '        position: fixed;'+
+    '        top: 20%;/*distance from top*/'+
+    '        right: 0;'+
+    '        z-index: 99999;'+
+    '        width: 17em;'+
+    '        height: 32.8em;'+
+    '        color: black;'+
+    '        background-color: #666666;'+
+    '        font-family: Verdana, sans-serif;'+
+    '        font-size: 0.7em;'+
+    '        -webkit-box-shadow: 0 0px 0.3em 0.1em #999999;'+
+    '        -moz-box-shadow: 0 0px 0.3em 0.1em #999999;'+
+    '        box-shadow: 0 0px 0.3em 0.1em #999999;'+
+    '    }'+
+    '    #PREFIX.mini'+
+    '    {'+
+    '        width: 2.9em;'+
+    '        height: 2.9em;'+
+    '        overflow:hidden;'+
+    '    }'+
+    '    #PREFIX.mini .PREFIX-header input, #PREFIX.mini .PREFIX-list, #PREFIX.mini .PREFIX-footer'+
+    '    {'+
+    '        display:none;'+
+    '    }'+
+    '        #PREFIX.mini .PREFIX-header div'+
+    '    {'+
+    '        display: block;'+
+    '        width: 100%;'+
+    '        height: 100%;'+
+    '    }'+
+    '    #PREFIX input'+
+    '    {'+
+    '        font-size: 1.0em;'+
+    '        border: 0.1em solid #999999;'+
+    '        border-radius: 0.2em;'+
+    '        padding: 0.2em 0.1em;'+
+    '        }'+
+    '    #PREFIX .PREFIX-header'+
+    '    {'+
+    '        height: 2.1em;'+
+    '        overflow:hidden;'+
+    '        padding: 0.4em;'+
+    '        color: white;'+
+    '        background-color: black;'+
+    '        }'+
+    '    #PREFIX .PREFIX-header input'+
+    '    {'+
+    '        width: 80%;'+
+    '        height: 1.4em;'+
+    '        }'+
+    '    #PREFIX .PREFIX-header div'+
+    '    {'+
+    '        position: absolute;'+
+    '        top:0;'+
+    '        right:0;'+
+    '        width: 18%;'+
+    '        height: 1.4em;'+
+    '        line-height: 1.4em;'+
+    '        text-align: center;'+
+    '        font-size: 2em;'+
+    '        font-weight: bold;'+
+    '        cursor: pointer;'+
+    '    }'+
+    '    #PREFIX .PREFIX-header div:hover'+
+    '    {'+
+    '        background-color: #444444;'+
+    '    }'+
+    '    #PREFIX .PREFIX-list'+
+    '    {'+
+    '        width: 100%;'+
+    '        height: 20em;'+
+    '        overflow: auto;'+
+    '        }'+
+    '    #PREFIX ul'+
+    '    {'+
+    '        list-style-type: none;'+
+    '        list-style-position: inside;'+
+    '        padding: 0;'+
+    '        margin: 0.5em 0.5em 1.2em 0.5em;'+
+    '        }'+
+    '    #PREFIX ul li'+
+    '    {'+
+    '        margin: 0.3em;'+
+    '        padding: 0.5em 0.5em;'+
+    '        color: white;'+
+    '        background-color: #717171;'+
+    '        font-size: 0.8em;'+
+    '        line-height: 1.5em;'+
+    '        cursor: pointer;'+
+    '        }'+
+    '    #PREFIX ul li:hover'+
+    '    {'+
+    '        background-color: #797979;'+
+    '        }'+
+    '    #PREFIX ul li.template'+
+    '    {'+
+    '        display: none;'+
+    '        }'+
+    '    #PREFIX ul li.active'+
+    '    {'+
+    '        background-color: black;'+
+    '        }'+
+    '    #PREFIX ul li.PREFIX-headline'+
+    '    {'+
+    '        color: white;'+
+    '        background-color: transparent;'+
+    '        text-align: center;'+
+    '        font-weight: bold;'+
+    '        }'+
+    '    #PREFIX .PREFIX-footer'+
+    '    {'+
+    '        padding: 0;'+
+    '        margin:0;'+
+    '        background-color: #444444;'+
+    '        }'+
+    '    #PREFIX .PREFIX-footer ul'+
+    '    {'+
+    '        margin: 0;'+
+    '        padding: 0.5em;'+
+    '        }'+
+    '    #PREFIX .PREFIX-footer ul li'+
+    '    {'+
+    '        color: white;'+
+    '        background-color: black;'+
+    '        font-size: 1.0em;'+
+    '        border-radius: 0.5em;'+
+    '        text-align: center;'+
+    '        }'+
+    '    #PREFIX .PREFIX-footer ul li input.PREFIX-seconds'+
+    '    {'+
+    '        text-align: center;'+
+    '        width: 2em;'+
+    '        }'+
+    '    #PREFIX .PREFIX-footer ul li:hover'+
+    '    {'+
+    '        background-color: #222222;'+
+    '        }'+
+    '    #PREFIX .PREFIX-footer ul li.inactive'+
+    '    {'+
+    '        background-color: #666666;'+
+    '        cursor: default;'+
+    '        }'+
+    '    </style>'+
+    '    <div id="PREFIX" class="mini">'+
+    '        <div class="PREFIX-header">'+
+    '            <input id="PREFIX-prefix" placeholder="prefix" type="text" name="" />'+
+    '            <div id="PREFIX-toggle">H</div>'+
+    '        </div>'+
+    '        <div class="PREFIX-list">'+
+    '            <ul id="PREFIX-css">'+
+    '                <li class="PREFIX-headline">CSS</li>'+
+    '                <li class="template"></li>'+
+    '            </ul>'+
+    '            <ul id="PREFIX-js">'+
+    '                <li class="PREFIX-headline">JS</li>'+
+    '                <li class="template"></li>'+
+    '            </ul>'+
+    '            <ul id="PREFIX-img">'+
+    '                <li class="PREFIX-headline">IMG</li>'+
+    '                <li class="template"></li>'+
+    '            </ul>'+
+    '        </div>'+
+    '        <div class="PREFIX-footer">'+
+    '            <ul>'+
+    '                <li id="PREFIX-submit-selected">refresh selected</li>'+
+    '                <li id="PREFIX-submit-start">refresh every <input  class="PREFIX-seconds" type="text" value="1" /> sec.</li>'+
+    '                <li id="PREFIX-submit-stop" class="inactive">stop refreshing</li>'+
+    '            </ul>'+
+    '        </div>'+
+    '    </div>';
 
     // All native (cross) browser function implementations that we are using are declared here.
     var
@@ -293,6 +477,11 @@
         // ... and remove the original nodes later. This should avoid a time gap without any definitions (useful for css).
         if( nDeleteDelay > 0 )
         {
+            // mark nodes for deletion
+            for(var i=0; i < removeTags.length; i++) {
+                xSetAttribute(removeTags[i], "data-hotswap-deleted", "1");
+            }
+
             setTimeout( function() {
                 for(var i=0; i < removeTags.length; i++) {
                     xRemove(removeTags[i]);
@@ -413,25 +602,29 @@
         for(var i=0; i<tags.length; i++) {
             node = tags[i];
             src = xGetAttribute(node,[srcAttributeName]);
-            if(src && tagFilterFunc(node))
+            // check if tag is already marked as deleted by hotswap
+            if( xIsEmpty( xGetAttribute(node, "data-hotswap-deleted") ) )
             {
-                detected = false;
-                for(var j=0; j<xcludedFiles.length; j++) {
-                    if( xContains(src,xcludedFiles[j]) )
-                    {
-                        detected = true;
-                        break;
-                    }
-                }
-                if( detected == xcludeComparator )
+                if(src && tagFilterFunc(node))
                 {
-                    // add the found file to the list
-                    fileNodes.push({
-                        type: type,
-                        node : node,
-                        tagName : tagName,
-                        srcAttributeName : srcAttributeName
-                    });
+                    detected = false;
+                    for(var j=0; j<xcludedFiles.length; j++) {
+                        if( xContains(src,xcludedFiles[j]) )
+                        {
+                            detected = true;
+                            break;
+                        }
+                    }
+                    if( detected == xcludeComparator )
+                    {
+                        // add the found file to the list
+                        fileNodes.push({
+                            type: type,
+                            node : node,
+                            tagName : tagName,
+                            srcAttributeName : srcAttributeName
+                        });
+                    }
                 }
             }
         }
@@ -547,9 +740,7 @@
      */
     hotswap.prototype.refreshAllCss = function( excludedFiles )
     {
-        this._recreate( "css", excludedFiles, false,
-            200 // we assume that the developer is on a local host, thus 200 MS for loading a .css file should suffice.
-        );
+        this._recreate( "css", excludedFiles, false, this.FILE_REMOVAL_DELAY );
     };
 
     /**
@@ -558,9 +749,7 @@
      */
     hotswap.prototype.refreshCss = function( includedFiles )
     {
-        this._recreate( "css", includedFiles, true,
-            200 // we assume that the developer is on a local host, thus 200 MS for loading a .css file should suffice.
-        );
+        this._recreate( "css", includedFiles, true, this.FILE_REMOVAL_DELAY );
     };
 
     /**
@@ -602,17 +791,31 @@
         return this._prefix;
     }
 
-    hotswap.prototype.guiShow = function()
+    /**
+     * Creates and displays a (position fixed) gui for hotswap.
+     * Useful for testing in environments without a debug console.
+     * @param nDistanceFromTopInPercent {Number} - Defines the distance to the top of the page in percent (default is 20).
+     */
+    hotswap.prototype.createGui = function( nDistanceFromTopInPercent )
     {
-        var gui = xGetElementById("PREFIX");
+        if( xIsEmpty(nDistanceFromTopInPercent) )
+        {
+            nDistanceFromTopInPercent = 20;
+        }
+
+        var gui = xGetElementById(this.CSS_HTML_PREFIX + "_wrapper");
 
         // remove if already existing
-        /*
         if( gui )
         {
-            xRemove(xGetElementById("PREFIX"));
+            xRemove(xGetElementById(this.CSS_HTML_PREFIX + "_wrapper"));
         }
-        */
+        gui = xCreateElement("div");
+        xSetAttribute( gui, "id", this.CSS_HTML_PREFIX + "_wrapper" );
+        var guiHtml = xReplace( this._guiHtml, "PREFIX", this.CSS_HTML_PREFIX );
+        guiHtml = xReplace( guiHtml, '20%;/*distance from top*/', nDistanceFromTopInPercent+'%;/*distance from top*/' );
+        gui.innerHTML = guiHtml;
+        xAppendChild( xGetElementsByTagName("body")[0], gui );
 
         // clear gui cache if not empty
         if( !xIsEmpty(this._guiCache) )
@@ -626,8 +829,6 @@
             "img" : []
         };
 
-        // create gui basics
-        // TODO: create gui
         var self = this;
         var createFilesList = function(list, files)
         {
@@ -668,34 +869,48 @@
             }
         }
 
-        createFilesList( xGetElementById("PREFIX-css"), this._getFilesByType("css") );
-        createFilesList( xGetElementById("PREFIX-js"), this._getFilesByType("js", ["hotswap.js"]) );
-        createFilesList( xGetElementById("PREFIX-img"), this._getFilesByType("img") );
+        createFilesList( xGetElementById(this.CSS_HTML_PREFIX+"-css"), this._getFilesByType("css") );
+        createFilesList( xGetElementById(this.CSS_HTML_PREFIX+"-js"), this._getFilesByType("js", ["hotswap.js"]) );
+        createFilesList( xGetElementById(this.CSS_HTML_PREFIX+"-img"), this._getFilesByType("img") );
 
         // add Event Listeners
 
-        // prefix
-        xAddEventListener( xGetElementById("PREFIX-prefix"), "blur", function(evt)
+        // show hide guid
+        xAddEventListener( xGetElementById(this.CSS_HTML_PREFIX+"-toggle"), "click", function(evt)
         {
-            self.guiPrefixChanged(evt.target);
+            var gui = xGetElementById(self.CSS_HTML_PREFIX);
+            if( xHasClass(gui, "mini") )
+            {
+                xRemoveClass( gui, "mini" );
+            }
+            else
+            {
+                xAddClass( gui, "mini" );
+            }
+        });
+
+        // prefix
+        xAddEventListener( xGetElementById(this.CSS_HTML_PREFIX+"-prefix"), "blur", function(evt)
+        {
+            self._guiPrefixChanged(evt.target);
         });
 
         // refresh selected btn
-        xAddEventListener( xGetElementById("PREFIX-submit-selected"), "click", function(evt)
+        xAddEventListener( xGetElementById(this.CSS_HTML_PREFIX+"-submit-selected"), "click", function(evt)
         {
             self._guiRefreshSelected()
         });
 
         // refresh every # sec.
-        xAddEventListener( xGetElementById("PREFIX-submit-start"), "click", function(evt)
+        xAddEventListener( xGetElementById(this.CSS_HTML_PREFIX+"-submit-start"), "click", function(evt)
         {
-            if( xGetAttribute(evt.target, "class") != "PREFIX-seconds" )
+            if( xGetAttribute(evt.target, "class") != this.CSS_HTML_PREFIX+"-seconds" )
             {
                 var input, nSeconds = 1;
                 var children = evt.target.children;
                 for(var i=0; i<children.length; ++i)
                 {
-                    if( xGetAttribute(children[i], "class") == "PREFIX-seconds" )
+                    if( xGetAttribute(children[i], "class") == this.CSS_HTML_PREFIX+"-seconds" )
                     {
                         nSeconds = children[i].value;
                     }
@@ -707,10 +922,24 @@
         });
 
         // stop refreshing
-        xAddEventListener( xGetElementById("PREFIX-submit-stop"), "click", function(evt)
+        xAddEventListener( xGetElementById(this.CSS_HTML_PREFIX+"-submit-stop"), "click", function(evt)
         {
             self._guiRefreshStop();
         });
+    }
+
+    /**
+     * Hides and deletes the gui if it exists.
+     */
+    hotswap.prototype.deleteGui = function()
+    {
+        var gui = xGetElementById(this.CSS_HTML_PREFIX + "_wrapper");
+
+        // remove if already existing
+        if( gui )
+        {
+            xRemove(xGetElementById(this.CSS_HTML_PREFIX + "_wrapper"));
+        }
     }
 
     /**
@@ -772,8 +1001,8 @@
         this._guiGuiRefreshInterval = setInterval( xBind(this._guiRefreshSelected, this), nSeconds * 1000 );
 
         // update gui indicators
-        xAddClass( xGetElementById("PREFIX-submit-start"), "inactive" );
-        xRemoveClass( xGetElementById("PREFIX-submit-stop"), "inactive" );
+        xAddClass( xGetElementById(this.CSS_HTML_PREFIX+"-submit-start"), "inactive" );
+        xRemoveClass( xGetElementById(this.CSS_HTML_PREFIX+"-submit-stop"), "inactive" );
     },
 
     hotswap.prototype._guiRefreshStop = function()
@@ -785,8 +1014,8 @@
         this._guiGuiRefreshInterval = null;
 
         // update gui indicators
-        xRemoveClass( xGetElementById("PREFIX-submit-start"), "inactive" );
-        xAddClass( xGetElementById("PREFIX-submit-stop"), "inactive" );
+        xRemoveClass( xGetElementById(this.CSS_HTML_PREFIX+"-submit-start"), "inactive" );
+        xAddClass( xGetElementById(this.CSS_HTML_PREFIX+"-submit-stop"), "inactive" );
     }
 
 }).call(this);

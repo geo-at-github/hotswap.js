@@ -1,12 +1,13 @@
-console.log("main.js called");
 function main()
 {
     var refreshInterval = setInterval(function()
     {
-        //refresh();
+        // this will refresh the pages resources automatically ever second.
+        refresh();
     }, 1000);
 
-    hotswap.guiShow();
+    // Creating a gui is optional but very handy for testing in environments without a debug console.
+    hotswap.createGui();
 }
 
 function refresh()
