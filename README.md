@@ -62,6 +62,9 @@ hotswap.refreshCss( ["main.js"] );
 
 // refresh all images (<img> tags) except "dont-refreh-me.png".
 hotswap.refreshAllImg( ["dont-refreh-me.png"] );
+
+// show a gui (this is optional and not required for hotswap to work) (Click on the "H").
+hotswap.createGui();
 ```
 
 ### Browser Compatiblity
