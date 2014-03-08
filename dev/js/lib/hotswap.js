@@ -31,6 +31,36 @@
     // Save the previous value of the "hotswap" variable.
     var previousHotswap = root.hotswap;
 
+    // Create Hotswap singleton constructor.
+    var hotswap = function()
+    {
+        if (!(this instanceof hotswap))
+        {
+            return new hotswap();
+        }
+        else
+        {
+            return this;
+        }
+    };
+
+    // Export the hotswap object
+    root.hotswap = hotswap();
+
+    // Current version (Semantic Versioning: http://semver.org)
+    hotswap.prototype.VERSION = '0.0.2';
+
+    // The random parameter name which is added to urls to prevent caching
+    hotswap.prototype.RND_PARAM_NAME = 'hs982345jkasg89zqnsl';
+
+    // If it is defined then it will be appended to all refreshed file urls.
+    hotswap.prototype._prefix = false;
+    hotswap.prototype._previousPrefix = false;
+
+    // used to store data about selected files in the gui
+    hotswap.prototype._guiCache = {};
+    hotswap.prototype._guiGuiRefreshInterval = null;
+
     // All native (cross) browser function implementations that we are using are declared here.
     var
         xGetElementById       = function(sId){ return document.getElementById(sId) },
@@ -46,6 +76,48 @@
                 ele.parentNode.removeChild( ele );
             }
         },
+        xAddEventListener = function(ele, sEvent, fn, bCaptureOrBubble)
+        {
+            if( xIsEmpty(bCaptureOrBubble) )
+            {
+                bCaptureOrBubble = false;
+            }
+            if (ele.addEventListener)
+            {
+                ele.addEventListener(sEvent, fn, bCaptureOrBubble);
+                return true;
+            }
+            else if (ele.attachEvent)
+            {
+                return ele.attachEvent('on' + sEvent, fn);
+            }
+            else
+            {
+                ele['on' + sEvent] = fn;
+            }
+        },
+        xStopPropagation = function(evt)
+        {
+            if (evt && evt.stopPropogation)
+            {
+                evt.stopPropogation();
+            }
+            else if (window.event && window.event.cancelBubble)
+            {
+                window.event.cancelBubble = true;
+            }
+        },
+        xPreventDefault = function(evt)
+        {
+            if (evt && evt.preventDefault)
+            {
+                evt.preventDefault();
+            }
+            else if (window.event && window.event.returnValue)
+            {
+                window.eventReturnValue = false;
+            }
+        },
         xContains = function(sHaystack, sNeedle)
         {
             return sHaystack.indexOf(sNeedle) >= 0
@@ -54,9 +126,13 @@
         {
             return sHaystack.indexOf(sNeedle) === 0
         },
-        xReplace = function(sHaystack, sNeedle)
+        xReplace = function(sHaystack, sNeedle, sReplacement)
         {
-            return sHaystack.split(sNeedle).join("");
+            if( xIsEmpty(sReplacement) )
+            {
+                sReplacement = "";
+            }
+            return sHaystack.split(sNeedle).join(sReplacement);
         },
         xGetAttribute = function(ele, sAttr)
         {
@@ -91,48 +167,72 @@
         xInsertAfter = function( refEle, newEle )
         {
             return xGetParent(refEle).insertBefore(newEle, refEle.nextSibling);
+        },
+        xBind = function(func, context)
+        {
+            /*if (Function.prototype.bind && func.bind === Function.prototype.bind)
+            {
+                return func.bind(context);
+            }
+            else*/
+            {
+                return function() {
+                    if( arguments.length > 2 )
+                    {
+                        return func.apply(context, arguments.slice(2));
+                    }
+                    else
+                    {
+                        return func.apply(context);
+                    }
+                };
+            }
+        },
+        xIsEmpty = function(value)
+        {
+            var ret = true;
+            if( value instanceof Object )
+            {
+                for(var i in value){ if(value.hasOwnProperty(i)){return false}}
+                return true;
+            }
+            ret = typeof value === "undefined" || value === undefined || value === null || value === "";
+            return ret;
+        },
+        xAddClass = function(ele, sClass)
+        {
+            var clazz = xGetAttribute( ele, "class" );
+            if( !xHasClass(ele, sClass) )
+            {
+                xSetAttribute( ele, "class", clazz + " " + sClass );
+            }
+        },
+        xRemoveClass = function(ele, sClass)
+        {
+            var clazz = xGetAttribute( ele, "class" );
+            if( xHasClass(ele, sClass) )
+            {
+                xSetAttribute( ele, "class", xReplace( clazz, sClass, "" ) );
+            }
+        },
+        xHasClass = function(ele, sClass)
+        {
+            var clazz = xGetAttribute( ele, "class" );
+            return !xIsEmpty(clazz) && xContains( clazz, sClass );
         };
-
-    // Create Hotswap singleton constructor.
-    var hotswap = function()
-    {
-        if (!(this instanceof hotswap))
-        {
-            return new hotswap();
-        }
-        else
-        {
-            return this;
-        }
-    };
-
-    // Export the hotswap object
-    root.hotswap = hotswap();
-
-    // Current version (Semantic Versioning: http://semver.org)
-    hotswap.prototype.VERSION = '0.0.1';
-
-    // The random parameter name which is added to urls to prevent caching
-    hotswap.prototype.RND_PARAM_NAME = 'hs982345jkasg89zqnsl';
-
-    // If it is defined then it will be appended to all refreshed file urls.
-    hotswap.prototype._prefix = false;
-    hotswap.prototype._previousPrefix = false;
 
     // Functions
     // --------------------
 
     /**
      *
-     * @param tagName {String} usually "script" or "link" (consider this a prefilter to the "tagFilterFunc" function)
-     * @param tagFilterFunc {Function} - a function which returns either true or false / function(ele){return true/false}
-     * @param srcAttributeName {String} - usually "src" or "href"
+     * @param type {String} - either "css", "js" or "img"
      * @param xcludedFiles {Array} - (in/ex)cluded files
      * @param xcludeComparator {Boolean} - true = include, false = exclude
      * @param nDeleteDelay {Number} - time to wait until to delete the original source in milliseconds.
      * @param bForceRecreation {Boolean} - true = real recreation, false = recreation by node cloning
      */
-    hotswap.prototype._recreate = function( tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator, nDeleteDelay, bForceRecreation )
+    hotswap.prototype._recreate = function( type, xcludedFiles, xcludeComparator, nDeleteDelay, bForceRecreation )
     {
         if( typeof nDeleteDelay == "undefined")
         {
@@ -144,14 +244,15 @@
             bForceRecreation = false;
         }
 
-        var tags = this._getFiles(tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator);
+        var tags = this._getFilesByType(type, xcludedFiles, xcludeComparator);
         var newTags = [];
         var removeTags = [];
-        var i, src, detected, node;
+        var i, src, detected, node, srcAttributeName;
         for(i=0; i<tags.length; i++)
         {
             // clone the old node (shallow copy)
-            node = tags[i];
+            node = tags[i].node;
+            srcAttributeName = tags[i].srcAttributeName;
             var newNode = {
                 node: null,
                 oldNode: node,
@@ -181,7 +282,7 @@
 
             // schedule tags to be removed and recreated.
             newTags.push(newNode);
-            removeTags.push(tags[i]);
+            removeTags.push(node);
         }
 
         // Add clones first ...
@@ -208,19 +309,18 @@
 
     /**
      *
-     * @param tagName {String} usually "script" or "link" (consider this a prefilter to the "tagFilterFunc" function)
-     * @param tagFilterFunc {Function} - a function which returns either true or false / function(ele){return true/false}
-     * @param srcAttributeName {String} - usually "src" or "href"
+     * @param type {String} - either "css", "js" or "img"
      * @param xcludedFiles {Array} - (in/ex)cluded files
      * @param xcludeComparator {Boolean} - true = include, false = exclude
      */
-    hotswap.prototype._reload = function( tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator )
+    hotswap.prototype._reload = function( type, xcludedFiles, xcludeComparator )
     {
-        var tags = this._getFiles(tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator);
-        var i, src, node;
+        var tags = this._getFilesByType(type, xcludedFiles, xcludeComparator);
+        var i, src, node, srcAttributeName;
         for(i=0; i<tags.length; i++)
         {
-            node = tags[i];
+            node = tags[i].node;
+            srcAttributeName = tags[i].srcAttributeName;
             // update the src property
             src = xGetAttribute( node, srcAttributeName );
             xSetAttribute( node, srcAttributeName, this._updatedUrl(src) );
@@ -228,19 +328,83 @@
     };
 
     /**
+     * Returns a list of files based on the type.
+     * @param type {String} - either "css", "js" or "img"
+     * @param xcludedFiles {Array} - (in/ex)cluded files
+     * @param xcludeComparator {Boolean} - true = include, false = exclude
+     * @returns {Array}
+     */
+    hotswap.prototype._getFilesByType = function( type, xcludedFiles, xcludeComparator )
+    {
+        var files;
+        switch(type)
+        {
+            case "css":
+                files = this._getFiles(
+                    "css",
+                    "link",
+                    function(ele)
+                    {
+                        return (xGetAttribute(ele, "rel") == "stylesheet" || xGetAttribute(ele, "type") == "text/css");
+                    },
+                    "href",
+                    xcludedFiles,
+                    xcludeComparator
+                )
+                break;
+
+            case "js":
+                files = this._getFiles(
+                    "js",
+                    "script",
+                    function(ele)
+                    {
+                        return true; // type="text/javascript" is not required in html5, thus we assume it´s always a js script
+                    },
+                    "src",
+                    xcludedFiles,
+                    xcludeComparator
+                )
+                break;
+
+            case "img":
+                files = this._getFiles(
+                    "img",
+                    "img",
+                    function(ele)
+                    {
+                        return (xGetAttribute(ele, "src") != "");
+                    },
+                    "src",
+                    xcludedFiles,
+                    xcludeComparator
+                )
+                break;
+        }
+
+        return files;
+    }
+
+    /**
      * Searches in the dom an returns an array of found nodes.
-     * @param tagName {String} usually "script" or "link" (consider this a prefilter to the "tagFilterFunc" function)
+     * @param type {String} - either "css", "js" or "img"
+     * @param tagName {String} - usually "script" or "link" (consider this a prefilter to the "tagFilterFunc" function)
      * @param tagFilterFunc {Function} - a function which returns either true or false / function(ele){return true/false}
      * @param srcAttributeName {String} - usually "src" or "href"
      * @param xcludedFiles {Array} - (in/ex)cluded files
-     * @param xcludeComparator {Boolean} - true = include, false = exclude
+     * @param xcludeComparator {Boolean} - true = include, false = exclude (default is false)
      * @return {Array} - list of dom nodes (usually <link>,<script> or <img>)
      */
-    hotswap.prototype._getFiles = function( tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator )
+    hotswap.prototype._getFiles = function( type, tagName, tagFilterFunc, srcAttributeName, xcludedFiles, xcludeComparator )
     {
         if( typeof xcludedFiles == "undefined" || !xcludedFiles)
         {
             xcludedFiles = [];
+        }
+
+        if( typeof xcludeComparator == "undefined" || !xcludeComparator)
+        {
+            xcludeComparator = false;
         }
 
         var fileNodes = [];
@@ -261,8 +425,13 @@
                 }
                 if( detected == xcludeComparator )
                 {
-                    // update the src property
-                    fileNodes.push( node );
+                    // add the found file to the list
+                    fileNodes.push({
+                        type: type,
+                        node : node,
+                        tagName : tagName,
+                        srcAttributeName : srcAttributeName
+                    });
                 }
             }
         }
@@ -273,10 +442,16 @@
     /**
      *
      * @param url {String} - a valid url (local or web)
+     * @param clean {Boolean} - if set to true all prefixes and randomization query parameters are removed. (default is false)
      * @returns {String} - the updated url with appended cache invalidation parameter.
      */
-    hotswap.prototype._updatedUrl = function( url )
+    hotswap.prototype._updatedUrl = function( url, clean )
     {
+        if( typeof clean == "undefined")
+        {
+            clean = false;
+        }
+
         url = url.replace(new RegExp("(\\?|&)"+this.RND_PARAM_NAME+"=[0-9.]*","g"), "");
         if( xContains(url, "?") )
         {
@@ -284,7 +459,10 @@
             {
                 url = url.split("&" + this.RND_PARAM_NAME).slice(0,-1).join("");
             }
-            url = url + "&" + this.RND_PARAM_NAME + "=" + Math.random() * 99999999;
+            if( !clean )
+            {
+                url = url + "&" + this.RND_PARAM_NAME + "=" + Math.random() * 99999999;
+            }
         }
         else
         {
@@ -292,7 +470,10 @@
             {
                 url = url.split("?" + this.RND_PARAM_NAME).slice(0,-1).join("");
             }
-            url = url + "?" + this.RND_PARAM_NAME + "=" + Math.random() * 99999999;
+            if( !clean )
+            {
+                url = url + "?" + this.RND_PARAM_NAME + "=" + Math.random() * 99999999;
+            }
         }
 
         // apply prefix
@@ -320,6 +501,18 @@
                 }
             }
         }
+        // Remove prefixes if clean is true
+        if( clean )
+        {
+            if( xStartsWith(url, this._prefix) )
+            {
+                url = xReplace(url, this._prefix);
+            }
+            if( xStartsWith(url, this._previousPrefix) )
+            {
+                url = xReplace(url, this._previousPrefix);
+            }
+        }
 
         return url;
     }
@@ -336,18 +529,7 @@
         }
         excludedFiles.push("hotswap.js"); // always ignore hotswap.js itself
 
-        this._recreate(
-            "script",
-            function(ele)
-            {
-                return true; // type="text/javascript" is not required in html5, thus we assume it´s always a js script
-            },
-            "src",
-            excludedFiles,
-            false,
-            0,
-            true
-        );
+        this._recreate( "js", excludedFiles, false, 0, true );
     };
 
     /**
@@ -356,18 +538,7 @@
      */
     hotswap.prototype.refreshJs = function( includedFiles )
     {
-        this._recreate(
-            "script",
-            function(ele)
-            {
-                return true; // type="text/javascript" is not required in html5, thus we assume it´s always a js script
-            },
-            "src",
-            includedFiles,
-            true,
-            0,
-            true
-        );
+        this._recreate( "js", includedFiles, true, 0, true );
     };
 
     /**
@@ -376,15 +547,7 @@
      */
     hotswap.prototype.refreshAllCss = function( excludedFiles )
     {
-        this._recreate(
-            "link",
-            function(ele)
-            {
-                return (xGetAttribute(ele, "rel") == "stylesheet" || xGetAttribute(ele, "type") == "text/css");
-            },
-            "href",
-            excludedFiles,
-            false,
+        this._recreate( "css", excludedFiles, false,
             200 // we assume that the developer is on a local host, thus 200 MS for loading a .css file should suffice.
         );
     };
@@ -395,15 +558,7 @@
      */
     hotswap.prototype.refreshCss = function( includedFiles )
     {
-        this._recreate(
-            "link",
-            function(ele)
-            {
-                return (xGetAttribute(ele, "rel") == "stylesheet" || xGetAttribute(ele, "type") == "text/css");
-            },
-            "href",
-            includedFiles,
-            true,
+        this._recreate( "css", includedFiles, true,
             200 // we assume that the developer is on a local host, thus 200 MS for loading a .css file should suffice.
         );
     };
@@ -414,16 +569,7 @@
      */
     hotswap.prototype.refreshAllImg = function( excludedFiles )
     {
-        this._reload(
-            "img",
-            function(ele)
-            {
-                return (xGetAttribute(ele, "src") != "");
-            },
-            "src",
-            excludedFiles,
-            false
-        );
+        this._reload( "img", excludedFiles, false );
     };
 
     /**
@@ -432,16 +578,7 @@
      */
     hotswap.prototype.refreshImg = function( includedFiles )
     {
-        this._reload(
-            "img",
-            function(ele)
-            {
-                return (xGetAttribute(ele, "src") != "");
-            },
-            "src",
-            includedFiles,
-            true
-        );
+        this._reload( "img", includedFiles, true );
     };
 
     /**
@@ -463,6 +600,193 @@
     hotswap.prototype.getPrefix = function()
     {
         return this._prefix;
+    }
+
+    hotswap.prototype.guiShow = function()
+    {
+        var gui = xGetElementById("PREFIX");
+
+        // remove if already existing
+        /*
+        if( gui )
+        {
+            xRemove(xGetElementById("PREFIX"));
+        }
+        */
+
+        // clear gui cache if not empty
+        if( !xIsEmpty(this._guiCache) )
+        {
+            this._guiCache = {};
+        }
+        this._guiCache.files = [];
+        this._guiCache.activeFiles = {
+            "css" : [],
+            "js" : [],
+            "img" : []
+        };
+
+        // create gui basics
+        // TODO: create gui
+        var self = this;
+        var createFilesList = function(list, files)
+        {
+            var i, j, clone, template, file, fileName;
+            // find the template
+            for(j=0; j<list.children.length; ++j)
+            {
+                if( xHasClass( list.children[j], "template" ) )
+                {
+                    template = list.children[j];
+                }
+            }
+            // create clones (fill the <ul> lists)
+            for(i=0; i<files.length; ++i)
+            {
+                file = files[i];
+                clone = xCloneNode( template );
+                // remove template css class from template
+                xRemoveClass( clone, "template" );
+                // insert filename
+                fileName = self._updatedUrl( xGetAttribute( file.node, file.srcAttributeName ), true );
+                if( !xContains(self._guiCache.files,fileName) )
+                {
+                    self._guiCache.files.push(fileName);
+                    clone.innerHTML = fileName;
+                    // append to list
+                    xAppendChild( list, clone );
+                    // add event listener
+                    xAddEventListener( clone, "click", (function(type, fileName){
+                        return function(evt){
+                            xStopPropagation(evt);
+                            xPreventDefault(evt);
+                            self._guiClickedFile(evt.target, type, fileName);
+                        };
+                    })(file.type, fileName)
+                    );
+                }
+            }
+        }
+
+        createFilesList( xGetElementById("PREFIX-css"), this._getFilesByType("css") );
+        createFilesList( xGetElementById("PREFIX-js"), this._getFilesByType("js", ["hotswap.js"]) );
+        createFilesList( xGetElementById("PREFIX-img"), this._getFilesByType("img") );
+
+        // add Event Listeners
+
+        // prefix
+        xAddEventListener( xGetElementById("PREFIX-prefix"), "blur", function(evt)
+        {
+            self.guiPrefixChanged(evt.target);
+        });
+
+        // refresh selected btn
+        xAddEventListener( xGetElementById("PREFIX-submit-selected"), "click", function(evt)
+        {
+            self._guiRefreshSelected()
+        });
+
+        // refresh every # sec.
+        xAddEventListener( xGetElementById("PREFIX-submit-start"), "click", function(evt)
+        {
+            if( xGetAttribute(evt.target, "class") != "PREFIX-seconds" )
+            {
+                var input, nSeconds = 1;
+                var children = evt.target.children;
+                for(var i=0; i<children.length; ++i)
+                {
+                    if( xGetAttribute(children[i], "class") == "PREFIX-seconds" )
+                    {
+                        nSeconds = children[i].value;
+                    }
+                }
+
+                self._guiRefreshSelected();
+                self._guiRefreshStart( nSeconds );
+            }
+        });
+
+        // stop refreshing
+        xAddEventListener( xGetElementById("PREFIX-submit-stop"), "click", function(evt)
+        {
+            self._guiRefreshStop();
+        });
+    }
+
+    /**
+     * Updates the prefix based on the "#PREFIX input" input fields value.
+     */
+    hotswap.prototype._guiPrefixChanged = function(ele)
+    {
+        if( ele )
+        {
+            this.setPrefix(ele.value);
+        }
+    },
+
+    hotswap.prototype._guiClickedFile = function( ele, sType, sFileName )
+    {
+        // search
+        var activeFiles = this._guiCache.activeFiles[sType];
+        if( xContains( activeFiles, sFileName ) )
+        {
+            // deselect
+            xRemoveClass(ele, "active");
+            activeFiles.splice( activeFiles.indexOf(sFileName), 1 )
+        }
+        else
+        {
+            // select
+            xAddClass(ele, "active");
+            activeFiles.push( sFileName );
+        }
+    },
+
+    hotswap.prototype._guiRefreshSelected = function()
+    {
+        var activeFiles = this._guiCache.activeFiles;
+        if( activeFiles['css'].length > 0 )
+        {
+            this.refreshCss( activeFiles['css'] );
+        }
+        if( activeFiles['js'].length > 0 )
+        {
+            this.refreshJs( activeFiles['js'] );
+        }
+        if( activeFiles['img'].length > 0 )
+        {
+            this.refreshImg( activeFiles['img'] );
+        }
+    },
+
+    hotswap.prototype._guiRefreshStart = function( nSeconds )
+    {
+        // stop autop refresh if running
+        if( this._guiGuiRefreshInterval !== null )
+        {
+            this._guiRefreshStop();
+        }
+
+        // start auto refreshing
+        var self = this;
+        this._guiGuiRefreshInterval = setInterval( xBind(this._guiRefreshSelected, this), nSeconds * 1000 );
+
+        // update gui indicators
+        xAddClass( xGetElementById("PREFIX-submit-start"), "inactive" );
+        xRemoveClass( xGetElementById("PREFIX-submit-stop"), "inactive" );
+    },
+
+    hotswap.prototype._guiRefreshStop = function()
+    {
+        if( this._guiGuiRefreshInterval !== null )
+        {
+            clearInterval(this._guiGuiRefreshInterval);
+        }
+        this._guiGuiRefreshInterval = null;
+
+        // update gui indicators
+        xRemoveClass( xGetElementById("PREFIX-submit-start"), "inactive" );
+        xAddClass( xGetElementById("PREFIX-submit-stop"), "inactive" );
     }
 
 }).call(this);

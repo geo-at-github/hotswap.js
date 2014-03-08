@@ -26,7 +26,7 @@ Simply download `hotswap.js` from the `/lib` directory and include it in your we
 Experiment with hotswap.js
 --------------------------
 
-Check out the `/demo` directory. Start `demo.html` and play around with `css/demo.css` and `js/hotswapped.js`.
+Check out the `/demo` directory. Start `demo.html` and play around with `css/demo.css` and `js/demo.js`.
 
 
 
