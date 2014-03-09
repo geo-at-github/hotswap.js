@@ -14,7 +14,7 @@ Some IDEs try to ease this process by supporting refreshing the page whenever a 
 
 This leads us to the hotswap.js "solution" which makes the browser pull the changes from the final files instead of waiting for an IDE to push changes. Doing it this way we don´t have to worry about how the file came to existence and application state is preserved too.
 
-I personally consider this a workaround until something better comes along. Please let me know if there is a working cross browser, cross platform, mobile enabled solution out there. I would love to ditch this project in favour of a better solution ;-)
+I consider this a workaround until something better comes along.
 
 Installation
 ------------
@@ -51,7 +51,7 @@ set the type to application/javascript in IE browsers, your Javscript will fail.
 A global variable `window.hotswap` or simply `hotswap` will be created.
 
 
-2) You can reload your included .css, .js or image (<img>) files by executing the corresponding "hotswap" command.
+2) You can reload your included .css, .js or image (img tag) files by executing the corresponding "hotswap" command.
 
 ```javascript
 // refresh all .js files
@@ -60,7 +60,7 @@ hotswap.refreshAllJs();
 // refresh main.css only
 hotswap.refreshCss( ["main.js"] );
 
-// refresh all images (<img> tags) except "dont-refreh-me.png".
+// refresh all images (img tags) except "dont-refreh-me.png".
 hotswap.refreshAllImg( ["dont-refreh-me.png"] );
 
 // show a gui (this is optional and not required for hotswap to work) (Click on the "H").
@@ -142,7 +142,7 @@ hotswap.refreshCss( ["refresh-me.css","refresh-me-too.css"] );
 
 ### hotswap.refreshAllImg([excludedFiles]) ###
 
-Refreshes all image files (<img>) on the page except the files listed in excludedFiles.
+Refreshes all image files (img tags) on the page except the files listed in excludedFiles.
 <br />@param excludedFiles {array} - Array of file names.
 
 Example:
@@ -154,7 +154,7 @@ hotswap.refreshAllImg( ["dont-refresh-me.png"] ){}
 
 ### hotswap.refreshImg([includedFiles]) ###
 
-Refreshes only the image files (<img>) listed in includedFiles.
+Refreshes only the image files (img tags) listed in includedFiles.
 <br />@param includedFiles {array} - Array of file names.
 
 Example:
