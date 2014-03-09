@@ -354,11 +354,11 @@
         },
         xBind = function(func, context)
         {
-            /*if (Function.prototype.bind && func.bind === Function.prototype.bind)
+            if (Function.prototype.bind && func.bind === Function.prototype.bind)
             {
                 return func.bind(context);
             }
-            else*/
+            else
             {
                 return function() {
                     if( arguments.length > 2 )
