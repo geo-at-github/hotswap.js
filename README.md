@@ -209,3 +209,14 @@ Example:
 ```javascript
 hotswap.deleteGui();
 ```
+
+
+### hotswap.guiRefreshFilesList() ###
+
+Refreshes the files listed in the gui.<br />
+Attention: This will remove all previous selections!
+
+Example:
+```javascript
+hotswap.guiRefreshFilesList();
+```

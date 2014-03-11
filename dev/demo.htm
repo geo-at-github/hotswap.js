@@ -32,7 +32,7 @@
             right: 0;
             z-index: 99999;
             width: 20em;
-            height: 32.8em;
+            height: auto;
 
             color: black;
             background-color: #666666;
@@ -102,7 +102,7 @@
         #PREFIX .PREFIX-list
         {
             width: 100%;
-            height: 20em;
+            height: 22em;
             overflow: auto;
         }
         #PREFIX ul
@@ -140,6 +140,7 @@
             background-color: transparent;
             text-align: center;
             font-weight: bold;
+            cursor: default;
         }
         #PREFIX .PREFIX-footer
         {
@@ -159,6 +160,8 @@
             font-size: 1.0em;
             border-radius: 0.5em;
             text-align: center;
+            height: 2.2em;
+            line-height: 2.2em;
         }
         #PREFIX .PREFIX-footer ul li input.PREFIX-seconds
         {
@@ -200,6 +203,7 @@
                 <li id="PREFIX-submit-selected">refresh selected</li>
                 <li id="PREFIX-submit-start">refresh every <input  class="PREFIX-seconds" type="text" value="1" /> sec.</li>
                 <li id="PREFIX-submit-stop" class="inactive">stop refreshing</li>
+                <li id="PREFIX-submit-refresh-list" class="inactive">refresh list</li>
             </ul>
         </div>
     </div>
