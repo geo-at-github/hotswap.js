@@ -552,7 +552,8 @@
                     "script",
                     function(ele)
                     {
-                        return true; // type="text/javascript" is not required in html5, thus we assume it´s always a js script
+                        // Assume type is text/javascript if not type is set ("text/javascript" is not required in html5).
+                        return (xGetAttribute(ele, "type") == "" || xGetAttribute(ele, "type") == "text/javascript");
                     },
                     "src",
                     xcludedFiles,

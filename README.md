@@ -67,7 +67,7 @@ hotswap.refreshAllImg( ["dont-refreh-me.png"] );
 hotswap.createGui();
 ```
 
-### Browser Compatiblity
+### Browser Compatibility
 
 Since `hotswap.js` is a library for developers and not consumers browser compatibility is not in the focus of development.
 `hotswap.js` has been designed to be compatible with IE9+, Firefox 23+, Safari 5+, Chrome 29+. Please report any browser issues here: https://github.com/geo-at-github/hotswap.js/issues
