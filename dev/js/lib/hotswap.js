@@ -48,7 +48,7 @@
     root.hotswap = hotswap();
 
     // Current version (Semantic Versioning: http://semver.org)
-    hotswap.prototype.VERSION = '0.1.0';
+    hotswap.prototype.VERSION = '0.2.0';
 
     // The random parameter name which is added to urls to prevent caching
     hotswap.prototype.RND_PARAM_NAME = 'hs982345jkasg89zqnsl';
