@@ -194,6 +194,7 @@ var currentPrefix = hotswap.getPrefix();
 Creates and displays a (position fixed) gui for hotswap.
 Useful for testing in environments without a debug console.
 <br />@param nDistanceFromTopInPercent {Number} - Defines the distance to the top of the page in percent (default is 20).
+<br />@returns {Boolean} - false if the gui could not be created, true otherwise.
 
 Example:
 ```javascript

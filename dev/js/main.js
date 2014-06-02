@@ -2,7 +2,7 @@ function main()
 {
     var refreshInterval = setInterval(function()
     {
-        // this will refresh the pages resources automatically ever second.
+        // this will refresh the pages resources automatically every second.
         refresh();
     }, 1000);
 
