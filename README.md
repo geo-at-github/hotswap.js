@@ -58,10 +58,10 @@ A global variable `window.hotswap` or simply `hotswap` will be created.
 hotswap.refreshAllJs();
 
 // refresh main.css only
-hotswap.refreshCss( ["main.js"] );
+hotswap.refreshCss( ["main.css"] );
 
-// refresh all images (img tags) except "dont-refreh-me.png".
-hotswap.refreshAllImg( ["dont-refreh-me.png"] );
+// refresh all images (img tags) except "dont-refresh-me.png".
+hotswap.refreshAllImg( ["dont-refresh-me.png"] );
 
 // show a gui (this is optional and not required for hotswap to work) (Click on the "H").
 hotswap.createGui();
